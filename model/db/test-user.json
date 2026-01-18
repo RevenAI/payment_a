@@ -1,0 +1,34 @@
+{
+  "test-user": [
+    {
+      "_id": 1,
+      "name": "iPhone",
+      "price": "NGN500000",
+      "buyer": "Sholola Oke"
+    },
+    {
+      "_id": 2,
+      "name": "iPhone",
+      "price": "NGN500000",
+      "buyer": "Sholola Oke"
+    },
+    {
+      "_id": 3,
+      "name": "LapTop Sec100",
+      "price": "NGN90",
+      "buyer": "Abby TIJANI Mobolaji"
+    },
+    {
+      "_id": 6,
+      "name": "iPhone",
+      "price": "NGN500000",
+      "buyer": "Sholola Oke"
+    },
+    {
+      "_id": 7,
+      "name": "Phone",
+      "price": "NGN34000",
+      "buyer": "Oloyede Abidemi"
+    }
+  ]
+}
