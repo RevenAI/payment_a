@@ -1,43 +1,19 @@
 import { modelTools } from "../../model/model-tools.js"
+import { router } from "../../routes/routers.js"
 import { Validator } from "../../utils/validator.utils.js"
 import { BaseController } from "../base.controller.js"
 
-/**
- * UsersController
- *
- * Handles user-related operations:
- * - Registration
- * - Updating user information
- * - Fetching users (single & multiple)
- * - Deletion
- *
- * Extends BaseController to leverage shared controller utilities like
- * `_sendResponse` and sanitization helpers.
- */
 class UsersController extends BaseController {
 
   //=====================================================
   //  PUBLIC METHODS
   //=====================================================
 
-  /**
-   * Register a new user
-   *
-   * Steps:
-   * 1. Sanitize input
-   * 2. Validate required fields (email & phone)
-   * 3. Run payload validation
-   * 4. Check for existing user (email/phone conflict)
-   * 5. Create user and return response
-   *
-   * @param {import('http').IncomingMessage} req - Request object
-   * @param {import('http').ServerResponse} res - Response object
-   */
   async registerUser(req, res) {
+    try {
       const data = this._getSanitizedData(req)
       const { firstName, lastName, email, phone, gender, dob } = data
 
-      // Required field check
       if (!email || !phone) {
         return this._sendResponse(res, {
           status: 400,
@@ -54,7 +30,6 @@ class UsersController extends BaseController {
         })
       }
 
-      // Check if user already exists
       const users = await this._getUsers()
       const userExists = users.find(
         u => u.email === email.toLowerCase() || u.phone === phone
@@ -67,7 +42,6 @@ class UsersController extends BaseController {
         })
       }
 
-      // Create user
       const created = await modelTools.create(this._userPath, [{
         firstName,
         lastName,
@@ -86,31 +60,20 @@ class UsersController extends BaseController {
         })
       }
 
-      // Successful response
       return this._sendResponse(res, {
         status: 201,
         data: newUser,
         message: 'User registered successfully'
       })
+
+    } catch (error) {
+      this._handleCatchBlockError(res, error)
+    }
   }
 
-  /**
-   * Update an existing user
-   *
-   * Steps:
-   * 1. Get and validate userId
-   * 2. Fetch the user
-   * 3. Sanitize provided fields
-   * 4. Validate payload
-   * 5. Check email/phone conflicts
-   * 6. Update user safely (ignore undefined fields)
-   * 7. Return response
-   *
-   * @param {import('http').IncomingMessage} req
-   * @param {import('http').ServerResponse} res
-   */
   async updateUser(req, res) {
-      const userId = this._getUserId(req)?.userId
+    try {
+      const userId = this._getUserId(req)
       this._validateUserId(userId)
 
       const foundUser = (await this._getUser(userId))[0]
@@ -131,7 +94,6 @@ class UsersController extends BaseController {
 
       const { email, phone } = data
 
-      // Check for email/phone conflicts with other users
       if (email || phone) {
         const users = await this._getUsers()
         const conflict = users.find(
@@ -148,7 +110,7 @@ class UsersController extends BaseController {
         }
       }
 
-      // SAFE UPDATE PAYLOAD (remove undefined values)
+      // SAFE UPDATE PAYLOAD (no undefined overwrite)
       const updatePayload = Object.fromEntries(
         Object.entries({
           ...data,
@@ -171,15 +133,15 @@ class UsersController extends BaseController {
         message: 'User updated successfully',
         data: updatedUser
       })
+
+    } catch (error) {
+      console.log('THIS OBJECTS DEBUGGING:', this)
+      this._handleCatchBlockError(res, error)
+    }
   }
 
-  /**
-   * Get all users
-   *
-   * @param {import('http').IncomingMessage} req
-   * @param {import('http').ServerResponse} res
-   */
-  getUsers = async (req, res) => {
+  async getUsers(req, res) {
+    try {
       const users = await this._getUsers()
 
       return this._sendResponse(res, {
@@ -187,43 +149,39 @@ class UsersController extends BaseController {
         data: { numberOfUsersInDb: users.length, users },
         message: users.length ? 'Users fetched successfully.' : 'No users found'
       })
-  }
-
-  /**
-   * Get a single user by ID
-   *
-   * @param {import('http').IncomingMessage} req
-   * @param {import('http').ServerResponse} res
-   */
-  async getUser(req, res) {
-    const userId = this._getUserId(req)?.userId
-    this._validateUserId(userId)
-
-    const user = (await this._getUser(userId))[0]
-
-    if (!user) {
-      return this._sendResponse(res, {
-        status: 404,
-        data: null,
-        message: 'User not found'
-      })
+    } catch (error) {
+      this._handleCatchBlockError(res, error)
     }
-
-    return this._sendResponse(res, {
-      status: 200,
-      data: user,
-      message: 'User fetched successfully.'
-    })
   }
 
-  /**
-   * Delete a user by ID
-   *
-   * @param {import('http').IncomingMessage} req
-   * @param {import('http').ServerResponse} res
-   */
+  async getUser(req, res) {
+    try {
+      const userId = this._getUserId(req)
+      this._validateUserId(userId)
+
+      const user = (await this._getUser(userId))[0]
+
+      if (!user) {
+        return this._sendResponse(res, {
+          status: 404,
+          data: null,
+          message: 'User not found'
+        })
+      }
+
+      return this._sendResponse(res, {
+        status: 200,
+        data: user,
+        message: 'User fetched successfully.'
+      })
+    } catch (error) {
+      this._handleCatchBlockError(res, error)
+    }
+  }
+
   async deleteUser(req, res) {
-      const userId = this._getUserId(req)?.userId
+    try {
+      const userId = this._getUserId(req)
       this._validateUserId(userId)
 
       const deletedUser = (await this._deleteUser(userId))[this._entity]?.[0]
@@ -241,59 +199,34 @@ class UsersController extends BaseController {
         message: 'User deleted successfully.',
         data: deletedUser
       })
+    } catch (error) {
+      this._handleCatchBlockError(res, error)
+    }
   }
 
   //=====================================================
-  //  PRIVATE METHODS & PROPERTIES
+  //  PRIVATE METHODS
   //=====================================================
 
-  /** Path to the user JSON file */
   _userPath = './model/users/users.json'
-
-  /** Entity key extracted from file path */
   _entity = modelTools._extractEntityFromPath(this._userPath)
 
-  /**
-   * Fetch all users
-   * @returns {Promise<Array>} Array of users
-   */
   _getUsers = async () => {
     const raw = await modelTools.findAll(this._userPath)
     return raw[this._entity]
   }
 
-  /**
-   * Fetch a single user by ID
-   * @param {number} _id
-   * @returns {Promise<Object[]>} Array with the found user
-   */
   _getUser = async (_id) => {
     const raw = await modelTools.findOne(this._userPath, _id)
     return raw[this._entity]
   }
 
-  /**
-   * Update a user by ID
-   * @param {number} _id
-   * @param {Array<Object>} data - Array of update payloads
-   */
   _updateUser = async (_id, data) =>
     modelTools.update(this._userPath, data, _id)
 
-  /**
-   * Delete a user by ID
-   * @param {number} _id
-   */
   _deleteUser = async (_id) =>
     modelTools.delete(this._userPath, _id)
 
-  /**
-   * Sanitize incoming request data
-   * Only strings are validated & sanitized
-   *
-   * @param {import('http').IncomingMessage} req
-   * @returns {Object} Sanitized user data
-   */
   _getSanitizedData = (req) => {
     const sanitize = (v) => this._validateAndSanitizeString(v)
 
@@ -307,24 +240,16 @@ class UsersController extends BaseController {
     }
   }
 
-  /**
-   * Extract userId from request
-   *
-   * @param {import('http').IncomingMessage} req
-   * @returns {Object} Object with userId
-   */
-    _getUserId = (req) => {
-    //route params and query params are attached 
-    // to to req at route level and can be access here freely
-    //the ids contains any/all ids specified in a given 
-    // route as sent from the client
-    return req.ids
+  _getUserId = (req) => {
+    const routeParam = router._getParams(req).routeParam
+    const id = Number(
+      typeof routeParam === 'string'
+        ? routeParam.replace(/^\//, '')
+        : routeParam
+    )
+    return Number.isNaN(id) ? null : id
   }
-  /**
-   * Validate userId
-   * @param {number} _id
-   * @throws {Error} if userId is invalid
-   */
+
   _validateUserId = (_id) => {
     if (!Number.isInteger(_id) || _id <= 0) {
       throw new Error('Valid userId is required')
@@ -332,7 +257,4 @@ class UsersController extends BaseController {
   }
 }
 
-// Export singleton instance
 export default new UsersController()
-
-

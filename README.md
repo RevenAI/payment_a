@@ -46,7 +46,7 @@ This project is designed for **learners** who want to **understand backend engin
 ```
 src/
 │
-├── server.js                # Entry point (http server)
+├── index.js                # Entry point (http server)
 │
 ├── routes/
 │   ├── routers.js           # Custom router & route matcher
@@ -117,7 +117,11 @@ Routes are matched manually using:
 Example:
 
 ```js
-router.post('/users/register', usersController.registerUser)
+router.isPostRoute(req, '/users/register') {
+    //Can do some API calls here
+    //for eample
+    return usersController.registerUser
+}
 ```
 
 Route params like:

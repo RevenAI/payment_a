@@ -1,56 +1,49 @@
 import http from 'node:http'
 import { router } from './routes/routers.js'
-// import { loadEnvFile } from 'node:process'
-// import { modelTools } from './model/model-tools.js'
-import path from 'node:path'
-import url from 'node:url'
 import { httpUtils } from './utils/http.utils.js'
+import { Auth } from './middleware/auth/auth.middleware.js'
+import { userRouter } from './routes/users/users.route.js' 
+import { Config } from './config/config.js'
 
-const PORT = process.env.PORT || 3001
-const HOST = process.env.HOST || '127.0.0.1'
+const PORT = Config.server.port
+const HOST = Config.server.host
 
-const server = http.createServer((req, res) => {
+/**
+ * Central server
+ */
+const server = http.createServer(async (req, res) => {
+    try {
+        // AUTHENTICATION
+        //Auth.isAuthenticated(req, res)
 
-async function attatchPayloadToReq() {
-  req.body = await httpUtils.parseRequestBody(req, { maxSize: 5 })
-}
-attatchPayloadToReq()
+        // PARSE REQUEST BODY
+        req.body = await httpUtils.parseRequestBody(req, { maxSize: 5 })
 
+        // ATTACH QUERY & PATH PARAMETERS
+        req.params = router.getPathParams(req, false)
+        req.query = router.getQueryParams(req)
 
-  // res.writeHead(200, { 'Content-Type': 'application/json' })
-  // res.end(JSON.stringify('Hello developers!'))
+        // USER ROUTES
+        const handled = await userRouter(req, res)
+        if (handled) return // route handled successfully
+
+        // NO MATCHED ROUTE → 404
+        httpUtils.sendResponse(res, {
+            status: 404,
+            message: 'Route not found',
+            success: false
+        })
+
+    } catch (error) {
+        // GLOBAL ERROR HANDLING → 500
+        httpUtils.sendResponse(res, {
+            status: 500,
+            message: error.message || 'Unexpected server error',
+            error
+        })
+    }
 })
-
-//const url = router._getURL('https://nexaalearnsystems.com/users')
-// const builtUrl = new URL('https://nexaalearnsystems.com/users/creates?page=1&limit=10')
-// const pathnames = builtUrl.pathname //.split('/')
-// const parsed = path.parse(pathnames)
-// console.log('BUILT URL PATHNAME:', pathnames, 'PARSED:', parsed)
-// console.log('BUILT URL:', builtUrl)
-
-//const filePath = './model/db/test-user.json'
-//const product = [
-// {
-//   name: 'iPhone',
-//   price: 'NGN500000',
-//   buyer: 'Sholola Oke'
-// },
-// {
-//   _id: 78,
-//   name: 'LapTop Sec100',
-//   price: 'NGN90',
-//   buyer: 'Abby TIJANI Mobolaji'
-// },
-// ]
-// async function testModelTools() {
-//   //const data = await modelTools.update(filePath, product, 3)
-//   const data = await modelTools.delete(filePath, 4)
-//   console.log('RETURN', data)
-// }
-// testModelTools()
 
 server.listen(PORT, HOST, () => {
-  console.log(`Server running on http://${HOST}:${PORT}`)
+    console.log(`Server running on http://${HOST}:${PORT}`)
 })
-
-

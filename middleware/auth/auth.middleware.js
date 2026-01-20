@@ -1,22 +1,55 @@
 import { TokenService } from "../../services/auth/token.service.js"
+import { AppError } from "../../utils/errors/error.utils.js"
+import { httpUtils } from "../../utils/http.utils.js"
 
+export class Auth {
 
-export function authenticate(req, res, next) {
+static isAuthenticated(req, res) {
+  try {
+    const decoded = this.authenticate(req, res)
+    if (!decoded) {
+    return httpUtils.sendResponse(res, {
+      status: 401,
+      message: 'Access denied: Please login to continue',
+    })
+    // return
+    //throw AppError.Unauthorized('Access denied: Please login to continue')
+    }
+
+    //attach auth payload to request and proceed
+    req.user = decoded 
+  } catch (error) {
+    AppError.handleCatchBlockError(res, error)
+  }
+}
+
+static authenticate(req, res) {
+  try {
   const authHeader = req.headers.authorization
 
-  if (!authHeader?.startsWith('Bearer ')) {
-    res.writeHead(401)
-    return res.end(JSON.stringify({ message: 'Unauthorized' }))
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return httpUtils.sendResponse(res, {
+      status: 401,
+      message: 'Access denied: Please login to continue',
+    })
   }
 
   const token = authHeader.split(' ')[1]
   const decoded = TokenService.verify(token)
 
   if (!decoded) {
-    res.writeHead(401)
-    return res.end(JSON.stringify({ message: 'Invalid or expired token' }))
+   return httpUtils.sendResponse(res, {
+      status: 401,
+      message: 'Invalid or expired token',
+    })
   }
 
-  req.user = decoded
-  next()
+  return decoded
+  } catch (error) {
+    //AppError.handleCatchBlockError(res, error)
+    throw error
+  }
+}
+
+
 }

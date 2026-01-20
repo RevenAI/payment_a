@@ -12,7 +12,7 @@ export class AuthService {
     const users = raw[ENTITY]
 
     if (users.find(u => u.email === email)) {
-      throw new Error('User already exists')
+      throw new Error('User already registered')
     }
 
     const hashedPassword = Password.hash(password)

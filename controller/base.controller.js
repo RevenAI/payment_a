@@ -1,3 +1,4 @@
+import { AppError } from "../utils/errors/error.utils.js"
 import { Helpers } from "../utils/helper.utils.js"
 import { httpUtils } from "../utils/http.utils.js"
 
@@ -29,10 +30,15 @@ export class BaseController {
   }
 
   _handleCatchBlockError(res, error) {
-    this._sendResponse(res, {
-      status: error.status || 500,
-      error: error.message || String(error),
-      message: error.message || 'Internal server error'
-    })
+    AppError.handleCatchBlockError(res, error)
   }
+ 
+  // _handleCatchBlockError(res, error) {
+  //   this._sendResponse(res, {
+  //     status: error.status || 500,
+  //     error: error.message || String(error),
+  //     message: error.message || 'Internal server error'
+  //   })
+  // }
+
 }
