@@ -1,9 +1,8 @@
 
 # needs to practice
 - working with path params and search params return in new URL() api
-- How do I create middleware in code nodejs, and does next exist in code nodejs like in express?
-- Validating and sanitizing string with no package ✔
-- How to fix. Importing module without .js in nodejs core ✔
+- How to create middleware in core nodejs and no framework
+- Validating and sanitizing string with no package
 - Implement pagination in code nodejs and then in express
 - Implement authentication in core nodejs
 

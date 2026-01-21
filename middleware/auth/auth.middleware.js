@@ -12,8 +12,6 @@ static isAuthenticated(req, res) {
       status: 401,
       message: 'Access denied: Please login to continue',
     })
-    // return
-    //throw AppError.Unauthorized('Access denied: Please login to continue')
     }
 
     //attach auth payload to request and proceed
@@ -46,8 +44,7 @@ static authenticate(req, res) {
 
   return decoded
   } catch (error) {
-    //AppError.handleCatchBlockError(res, error)
-    throw error
+    AppError.handleCatchBlockError(res, error)
   }
 }
 

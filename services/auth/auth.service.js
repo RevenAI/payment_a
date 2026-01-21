@@ -1,4 +1,5 @@
 import { modelTools } from '../../model/model-tools.js'
+import { AppError } from '../../utils/errors/error.utils.js'
 import { Password } from '../../utils/security/password.js'
 import { TokenService } from './token.service.js'
 
@@ -12,7 +13,7 @@ export class AuthService {
     const users = raw[ENTITY]
 
     if (users.find(u => u.email === email)) {
-      throw new Error('User already registered')
+      throw AppError.Conflict('User already registered')
     }
 
     const hashedPassword = Password.hash(password)
