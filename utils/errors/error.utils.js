@@ -104,6 +104,13 @@ export class AppError extends Error {
     return new AppError(this.statusMessage.METHOD_NOT_ALLOWED, status, message, details);
   }
 
+  /**
+   * 422 Unprocessable Entity
+   */
+  static UnprocessableEntity(message = null, status = "Unprocessable Entity", details = null) {
+    return new AppError(this.statusMessage.UNPROCESSABLE_ENTITY, status, message, details);
+  }
+
   // -------------------------
   // Status codes reference
   // -------------------------
