@@ -24,31 +24,32 @@ const USER_ROUTES = {
  * @returns {Promise<boolean>} Returns true if route matched and was handled
  */
 export const userRouter = async (req, res) => {
-
+ const pathname = router.getPathParams(req, false)
     // -------------------------
     // GET /users - Fetch all users
     // -------------------------
-    if (router.isGetRoute(req, USER_ROUTES.GET_ALL)) {
+    const isGetAll = pathname === USER_ROUTES.GET_ALL || pathname === `${USER_ROUTES.GET_ALL}/`
+     if (router.isGetRoute(req) && isGetAll) {
         /**
          * @route GET /users
          * @access Public
          * @returns {Promise<void>}
          */
-        await router.get(req, res, USER_ROUTES.GET_ALL, usersController.getUsers)
-        return true
-    }
+         await router.get(req, res, USER_ROUTES.GET_ALL, usersController.getUsers)
+         return true
+     }
 
     // -------------------------
     // GET /users/:userId - Fetch a single user
     // -------------------------
-    if (router.isGetRoute(req, USER_ROUTES.GET_SINGLE)) {
+    if (router.isGetRoute(req) && router._hasPathParams(req, USER_ROUTES.GET_SINGLE)) {
         /**
          * @route GET /users/:userId
          * @access Public
          * @param {number} req.ids.userId - User ID from route parameters
          * @returns {Promise<void>}
          */
-        router._attachIdsToRequest(req, USER_ROUTES.GET_SINGLE, req.params)
+        router._attachIdsToRequest(req, USER_ROUTES.GET_SINGLE, pathname)
         await router.get(req, res, USER_ROUTES.GET_SINGLE, usersController.getUser)
         return true
     }
@@ -56,7 +57,8 @@ export const userRouter = async (req, res) => {
     // -------------------------
     // POST /users - Register new user
     // -------------------------
-    if (router.isPostRoute(req, USER_ROUTES.POST)) {
+     const isPost = pathname === USER_ROUTES.POST || pathname === `${USER_ROUTES.POST}/`
+    if (router.isPostRoute(req) && isPost ) {
         /**
          * @route POST /users
          * @access Public
@@ -76,7 +78,7 @@ export const userRouter = async (req, res) => {
     // -------------------------
     // PUT /users/:userId - Update existing user entirely
     // -------------------------
-    if (router.isPutRoute(req, USER_ROUTES.PUT)) {
+    if (router.isPutRoute(req) && router._hasPathParams(req, USER_ROUTES.PUT)) {
         /**
          * @route PUT /users/:userId
          * @access Public
@@ -84,7 +86,7 @@ export const userRouter = async (req, res) => {
          * @param {Object} req.body - Updated user data payload
          * @returns {Promise<void>}
          */
-        router._attachIdsToRequest(req, USER_ROUTES.PUT, req.params)
+        router._attachIdsToRequest(req, USER_ROUTES.PUT, pathname)
         await router.put(req, res, USER_ROUTES.PUT, usersController.updateUser)
         return true
     }
@@ -92,7 +94,7 @@ export const userRouter = async (req, res) => {
     // -------------------------
     // PATCH /users/:userId - Partially update user
     // -------------------------
-    if (router.isPatchRoute(req, USER_ROUTES.PATCH)) {
+    if (router.isPatchRoute(req) && router._hasPathParams(req, USER_ROUTES.PATCH)) {
         /**
          * @route PATCH /users/:userId
          * @access Public
@@ -100,7 +102,7 @@ export const userRouter = async (req, res) => {
          * @param {Object} req.body - Partial update payload
          * @returns {Promise<void>}
          */
-        router._attachIdsToRequest(req, USER_ROUTES.PATCH, req.params)
+        router._attachIdsToRequest(req, USER_ROUTES.PATCH, pathname)
         await router.patch(req, res, USER_ROUTES.PATCH, usersController.updateUser)
         return true
     }
@@ -108,14 +110,14 @@ export const userRouter = async (req, res) => {
     // -------------------------
     // DELETE /users/:userId - Delete user
     // -------------------------
-    if (router.isDeleteRoute(req, USER_ROUTES.DELETE)) {
+    if (router.isDeleteRoute(req) && router._hasPathParams(req, USER_ROUTES.PATCH)) {
         /**
          * @route DELETE /users/:userId
          * @access Public
          * @param {number} req.ids.userId - User ID from route parameters
          * @returns {Promise<void>}
          */
-        router._attachIdsToRequest(req, USER_ROUTES.DELETE, req.params)
+        router._attachIdsToRequest(req, USER_ROUTES.DELETE, pathname)
         await router.delete(req, res, USER_ROUTES.DELETE, usersController.deleteUser)
         return true
     }

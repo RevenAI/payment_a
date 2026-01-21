@@ -33,16 +33,17 @@ class UsersController extends BaseController {
    * @param {import('http').IncomingMessage} req - Request object
    * @param {import('http').ServerResponse} res - Response object
    */
-  async registerUser(req, res) {
+  registerUser = async (req, res) => {
+    
       const data = this._getSanitizedData(req)
       const { firstName, lastName, email, phone, gender, dob } = data
 
       // Required field check
       if (!email || !phone) {
-        return this._sendResponse(res, {
-          status: 400,
-          message: 'Email and phone required'
-        })
+         return this._sendResponse(res, {
+           status: 400,
+           message: 'Email and phone required'
+         })
       }
 
       // VALIDATION (after sanitization)
@@ -61,10 +62,10 @@ class UsersController extends BaseController {
       )
 
       if (userExists) {
-        return this._sendResponse(res, {
-          status: 409,
-          message: 'User already registered'
-        })
+         return this._sendResponse(res, {
+           status: 409,
+           message: 'User already registered'
+         })
       }
 
       // Create user
@@ -80,10 +81,10 @@ class UsersController extends BaseController {
       const newUser = created[this._entity]?.[0]
 
       if (!newUser?._id) {
-        return this._sendResponse(res, {
-          status: 409,
-          message: 'Registration failed. Please try again.'
-        })
+         return this._sendResponse(res, {
+           status: 409,
+           message: 'Registration failed. Please try again.'
+         })
       }
 
       // Successful response
@@ -109,8 +110,8 @@ class UsersController extends BaseController {
    * @param {import('http').IncomingMessage} req
    * @param {import('http').ServerResponse} res
    */
-  async updateUser(req, res) {
-      const userId = this._getUserId(req)?.userId
+  updateUser = async (req, res) => {
+      const userId = Number(this._getUserId(req)?.userId)
       this._validateUserId(userId)
 
       const foundUser = (await this._getUser(userId))[0]
@@ -195,8 +196,8 @@ class UsersController extends BaseController {
    * @param {import('http').IncomingMessage} req
    * @param {import('http').ServerResponse} res
    */
-  async getUser(req, res) {
-    const userId = this._getUserId(req)?.userId
+  getUser = async (req, res) => {
+    const userId = Number(this._getUserId(req)?.userId)
     this._validateUserId(userId)
 
     const user = (await this._getUser(userId))[0]
@@ -222,8 +223,8 @@ class UsersController extends BaseController {
    * @param {import('http').IncomingMessage} req
    * @param {import('http').ServerResponse} res
    */
-  async deleteUser(req, res) {
-      const userId = this._getUserId(req)?.userId
+  deleteUser = async (req, res) => {
+      const userId = Number(this._getUserId(req)?.userId)
       this._validateUserId(userId)
 
       const deletedUser = (await this._deleteUser(userId))[this._entity]?.[0]
@@ -326,7 +327,7 @@ class UsersController extends BaseController {
    * @throws {Error} if userId is invalid
    */
   _validateUserId = (_id) => {
-    if (!Number.isInteger(_id) || _id <= 0) {
+    if (!Number.isInteger(_id) || Number(_id) <= 0) {
       throw new Error('Valid userId is required')
     }
   }

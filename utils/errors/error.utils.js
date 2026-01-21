@@ -1,6 +1,3 @@
-// appError.js
-import { settings } from "../../config/config.js";
-//import { httpUtils } from "../http.utils.js";
 
 /**
  * Custom application error class for standardized error handling.
@@ -28,20 +25,20 @@ export class AppError extends Error {
    * @param {object} res - Express response object.
    * @param {Error} error - Error instance (AppError or generic Error).
    */
-  // static handleCatchBlockError(res, error) {
-  //   const statusCode = error instanceof AppError ? error.statusCode : 500;
-  //   const status = error instanceof AppError ? error.status : "Internal Server Error";
-  //   const message = error.message || "Unexpected error occurred";
-  //   const details = settings.isDevMode ? error : null
+  static handleCatchBlockError(res, error) {
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    const status = error instanceof AppError ? error.status : "Internal Server Error";
+    const message = error.message || "Unexpected error occurred";
+    const details = settings.isDevMode ? error : null
 
-  //   // httpUtils.sendResponse(res, {
-  //   //   statusCode,
-  //   //   status,
-  //   //   message,
-  //   //   details: error.details || null,
-  //   // });
-  //   return new AppError(statusCode, status, message, details)
-  // }
+    // httpUtils.sendResponse(res, {
+    //   statusCode,
+    //   status,
+    //   message,
+    //   details: error.details || null,
+    // });
+    return new AppError(statusCode, status, message, details)
+  }
 
   // -------------------------
   // Factory methods for errors
@@ -97,6 +94,13 @@ export class AppError extends Error {
    * 405 Method Not Allowd
    */
   static MethodNotAllowed(message = null, status = "Method Not Allowed", details = null) {
+    return new AppError(this.statusMessage.METHOD_NOT_ALLOWED, status, message, details);
+  }
+
+  /**
+   * 503 Service Unavailable
+   */
+  static ServiceUnavailable(message = null, status = "Service Unavailable", details = null) {
     return new AppError(this.statusMessage.METHOD_NOT_ALLOWED, status, message, details);
   }
 

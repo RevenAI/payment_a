@@ -9,10 +9,6 @@ export class BaseController {
   }
 
   _validateAndSanitizeString(strings) {
-    if (!(typeof strings === 'string' || Array.isArray(strings))) {
-      throw new Error('Invalid arg. Expected non-empty string or an array of strings')
-    }
-
     const validate = (v) => Helpers.sanitizeAndEscape(v)
 
     if (typeof strings === 'string') {
@@ -27,6 +23,9 @@ export class BaseController {
     if (Array.isArray(strings)) {
       return strings.map(validate)
     }
+
+    //return without throwing for undefined or null values
+    return
   }
 
   _handleCatchBlockError(res, error) {

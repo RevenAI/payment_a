@@ -1,3 +1,4 @@
+import path from "path"
 import { asyncHandler } from "../utils/errors/async.utils.js"
 import { AppError } from "../utils/errors/error.utils.js"
 
@@ -100,28 +101,42 @@ class Router {
    * @param {string} route
    * @returns {boolean}
    */
-  isGetRoute(req, route) {
-    return req.method === 'GET' && this._hasPathParams(req, route)
+  isGetRoute(req) {
+    return req.method === 'GET'
   }
 
   /** Check if the request matches a POST route */
-  isPostRoute(req, route) {
-    return req.method === 'POST' && this._hasPathParams(req, route)
+  isPostRoute(req) {
+    return req.method === 'POST'
   }
 
   /** Check if the request matches a PUT route */
-  isPutRoute(req, route) {
-    return req.method === 'PUT' && this._hasPathParams(req, route)
+  isPutRoute(req) {
+    return req.method === 'PUT'
   }
 
   /** Check if the request matches a PATCH route */
-  isPatchRoute(req, route) {
-    return req.method === 'PATCH' && this._hasPathParams(req, route)
+  isPatchRoute(req) {
+    return req.method === 'PATCH'
   }
 
   /** Check if the request matches a DELETE route */
-  isDeleteRoute(req, route) {
-    return req.method === 'DELETE' && this._hasPathParams(req, route)
+  isDeleteRoute(req) {
+    return req.method === 'DELETE'
+  }
+
+    /**
+   * Check if the request path matches the expected route path
+   * @param {Object} req
+   * @param {string} route
+   * @returns {boolean}
+   */
+  _hasPathParams(req, route) {
+  const pathname = this.getPathParams(req, false)
+  router._attachIdsToRequest(req, route, req.params)
+  const ids = this._getIdFromParams(route, pathname)
+  if (!Object.values(ids).length) return false
+  return true
   }
 
   //====================================================================
@@ -179,7 +194,8 @@ class Router {
     const PATHNAME = pathname.split('/')
 
     if (PATHNAME.length !== ROUTE.length) {
-      throw new Error('Path does not match route')
+      //return
+      throw AppError.BadRequest('route and pathname not match')
     }
 
     for (let i = 0; i < ROUTE.length; i++) {
@@ -187,7 +203,6 @@ class Router {
         track[ROUTE[i].slice(1)] = PATHNAME[i]
       }
     }
-
     return track
   }
 
@@ -204,21 +219,10 @@ class Router {
  */
 _attachIdsToRequest(req, route, pathname) {
     const pn = pathname ?? this.getPathParams(req, false)
-    if (!pathname) return null
-
-    const ids = this._getIdFromParams(route, pathname)
+    if (!pn) return null
+    const ids = this._getIdFromParams(route, pn)
     req.ids = ids
 }
-
-  /**
-   * Check if the request path matches the expected route path
-   * @param {Object} req
-   * @param {string} route
-   * @returns {boolean}
-   */
-  _hasPathParams(req, route) {
-    return this.getPathParams(req, false) === route
-  }
 
   /**
    * Check if any query parameters include a specific value

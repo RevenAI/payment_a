@@ -1,241 +1,328 @@
 import { modelTools } from "../../model/model-tools.js"
-import { router } from "../../routes/routers.js"
 import { BaseController } from "../base.controller.js"
 
-class Payments extends BaseController {
+/**
+ * PaymentsController
+ *
+ * Simulates a real-world payment gateway flow:
+ * - Initialize payment
+ * - Verify payment
+ * - Fetch payments
+ *
+ * This controller mimics services like Paystack / Stripe
+ * but runs fully locally for development & learning.
+ */
+class PaymentsController extends BaseController {
 
   //=====================================================
   //  PUBLIC METHODS
   //=====================================================
 
-  async createProduct(req, res) {
-    try {
-      const { name, description, price, numberInStock } =
-        this._getSanitizedData(req)
+  /**
+   * Initialize a payment transaction
+   *
+   * Flow:
+   * 1. Sanitize payload
+   * 2. Validate required fields
+   * 3. Generate reference
+   * 4. Persist payment with "pending" status
+   * 5. Return simulated authorization URL
+   *
+   * @param {import('http').IncomingMessage} req
+   * @param {import('http').ServerResponse} res
+   */
+  initializePayment = async (req, res) => {
+    const { email, amount, currency } = this._getSanitizedData(req)
 
-      if (!name) {
-        return this._sendResponse(res, {
-          status: 400,
-          message: 'Product name is required'
-        })
-      }
-
-      const products = await this._getProducts()
-      const exists = products.find(
-        p => p.name === name.toUpperCase()
-      )
-
-      if (exists) {
-        return this._sendResponse(res, {
-          status: 409,
-          message: 'Product already registered'
-        })
-      }
-
-      const created = await modelTools.create(this._productPath, [{
-        name: name.toUpperCase(),
-        description,
-        price,
-        numberInStock
-      }])
-
-      const product = created[this._entity]?.[0]
-
-      if (!product?._id) {
-        return this._sendResponse(res, {
-          status: 409,
-          message: 'Registration failed. Please try again.'
-        })
-      }
-
+    if (!email || !amount) {
       return this._sendResponse(res, {
-        status: 201,
-        data: product,
-        message: 'Product registered successfully'
+        status: 400,
+        message: 'Email and amount are required'
       })
-
-    } catch (error) {
-      this._handleCatchBlockError(res, error)
     }
+
+    const reference = this._generateReference()
+
+    const paymentPayload = {
+      email,
+      amount: Number(amount),
+      currency: currency ?? 'NGN',
+      reference,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    }
+
+    const created = await modelTools.create(this._paymentPath, [paymentPayload])
+    const payment = created[this._entity]?.[0]
+
+    if (!payment?._id) {
+      return this._sendResponse(res, {
+        status: 500,
+        message: 'Payment initialization failed'
+      })
+    }
+
+    return this._sendResponse(res, {
+      status: 201,
+      message: 'Payment initialized',
+      data: {
+        reference,
+        authorization_url: `https://fake-gateway.dev/pay/${reference}`
+      }
+    })
   }
 
-  async updateProduct(req, res) {
-    try {
-      const productId = this._getProductId(req)
-      this._validateProductId(productId)
+  /**
+ * Pay for a product
+ *
+ * Simulates a real-world checkout payment flow:
+ * - Validate product & quantity
+ * - Calculate total cost
+ * - Initialize payment
+ * - Reserve product stock (soft lock)
+ *
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ */
+payForProduct = async (req, res) => {
+  const { productId, quantity, email } = this._getSanitizedData(req)
 
-      const found = (await this._getProduct(productId))[0]
-      if (!found) {
-        return this._sendResponse(res, {
-          status: 404,
-          message: 'Product not found'
-        })
-      }
-
-      const data = this._getSanitizedData(req)
-
-      if (data.name) {
-        const products = await this._getProducts()
-        const conflict = products.find(
-          p =>
-            p._id !== found._id &&
-            p.name === data.name.toUpperCase()
-        )
-
-        if (conflict) {
-          return this._sendResponse(res, {
-            status: 409,
-            message: `Product with name "${data.name}" already exists`
-          })
-        }
-      }
-
-      // prevent undefined overwrite
-      const updatePayload = Object.fromEntries(
-        Object.entries({
-          ...data,
-          name: data.name?.toUpperCase()
-        }).filter(([, v]) => v !== undefined)
-      )
-
-      const updated = await this._updateProduct(found._id, [updatePayload])
-      const updatedProduct = updated[this._entity]?.[0]
-
-      if (!updatedProduct?._id) {
-        return this._sendResponse(res, {
-          status: 409,
-          message: 'Product update failed'
-        })
-      }
-
-      return this._sendResponse(res, {
-        status: 200,
-        message: 'Product updated successfully',
-        data: updatedProduct
-      })
-
-    } catch (error) {
-      this._handleCatchBlockError(res, error)
-    }
+  if (!productId || !quantity || !email) {
+    return this._sendResponse(res, {
+      status: 400,
+      message: 'productId, quantity and email are required'
+    })
   }
 
-  async getProducts(req, res) {
-    try {
-      const products = await this._getProducts()
-
-      return this._sendResponse(res, {
-        status: 200,
-        data: {
-          numberOfProductsInDb: products.length,
-          products
-        },
-        message: products.length
-          ? 'Products fetched successfully.'
-          : 'No products found'
-      })
-
-    } catch (error) {
-      this._handleCatchBlockError(res, error)
-    }
+  const qty = Number(quantity)
+  if (!Number.isInteger(qty) || qty <= 0) {
+    return this._sendResponse(res, {
+      status: 400,
+      message: 'Quantity must be a positive integer'
+    })
   }
 
-  async getProduct(req, res) {
-    try {
-      const productId = this._getProductId(req)
-      this._validateProductId(productId)
+  // Fetch product
+  const products = await modelTools.findAll(this._productPath)
+  const product = products[this._productEntity]
+    .find(p => p._id === Number(productId))
 
-      const product = (await this._getProduct(productId))[0]
-
-      if (!product) {
-        return this._sendResponse(res, {
-          status: 404,
-          message: 'Product not found',
-          data: null
-        })
-      }
-
-      return this._sendResponse(res, {
-        status: 200,
-        data: product,
-        message: 'Product fetched successfully'
-      })
-
-    } catch (error) {
-      this._handleCatchBlockError(res, error)
-    }
+  if (!product) {
+    return this._sendResponse(res, {
+      status: 404,
+      message: 'Product not found'
+    })
   }
 
-  async deleteProduct(req, res) {
-    try {
-      const productId = this._getProductId(req)
-      this._validateProductId(productId)
+  if (product.numberInStock < qty) {
+    return this._sendResponse(res, {
+      status: 409,
+      message: 'Insufficient product stock'
+    })
+  }
 
-      const deleted =
-        (await this._deleteProduct(productId))[this._entity]?.[0]
+  // Calculate total
+  const totalAmount = product.price * qty
+  const reference = this._generateReference()
 
-      if (!deleted) {
-        return this._sendResponse(res, {
-          status: 404,
-          message: 'Product not found'
-        })
-      }
+  // Create payment (PENDING)
+  const paymentPayload = {
+    reference,
+    email,
+    productId: product._id,
+    quantity: qty,
+    amount: totalAmount,
+    currency: 'NGN',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  }
 
+  const created = await modelTools.create(this._paymentPath, [paymentPayload])
+  const payment = created[this._entity]?.[0]
+
+  if (!payment?._id) {
+    return this._sendResponse(res, {
+      status: 500,
+      message: 'Payment initialization failed'
+    })
+  }
+
+  return this._sendResponse(res, {
+    status: 201,
+    message: 'Payment initialized for product',
+    data: {
+      reference,
+      product: {
+        id: product._id,
+        name: product.name,
+        quantity: qty,
+        unitPrice: product.price,
+        totalAmount
+      },
+      authorization_url: `https://fake-gateway.dev/pay/${reference}`
+    }
+  })
+}
+
+  /**
+   * Verify a payment transaction
+   *
+   * Simulates gateway verification:
+   * - If reference exists
+   * - Randomly marks payment as success or failed
+   * - Idempotent (won't re-process completed payments)
+   *
+   * @param {import('http').IncomingMessage} req
+   * @param {import('http').ServerResponse} res
+   */
+  verifyPayment = async (req, res) => {
+    const reference = this._getPaymentReference(req)
+
+    if (!reference) {
+      return this._sendResponse(res, {
+        status: 400,
+        message: 'Payment reference is required'
+      })
+    }
+
+    const payments = await this._getPayments()
+    const payment = payments.find(p => p.reference === reference)
+
+    if (!payment) {
+      return this._sendResponse(res, {
+        status: 404,
+        message: 'Payment not found'
+      })
+    }
+
+    // Idempotency: do not re-process completed payments
+    if (payment.status !== 'pending') {
       return this._sendResponse(res, {
         status: 200,
-        message: 'Product deleted successfully',
-        data: deleted
+        message: 'Payment already processed',
+        data: payment
       })
-
-    } catch (error) {
-      this._handleCatchBlockError(res, error)
     }
+
+    // Simulate gateway response
+    const isSuccessful = Math.random() >= 0.3 // ~70% success rate
+
+    const updatedStatus = isSuccessful ? 'success' : 'failed'
+
+    const updated = await this._updatePayment(payment._id, [{
+      status: updatedStatus,
+      verifiedAt: new Date().toISOString()
+    }])
+
+    const updatedPayment = updated[this._entity]?.[0]
+
+    return this._sendResponse(res, {
+      status: 200,
+      message: `Payment ${updatedStatus}`,
+      data: updatedPayment
+    })
+  }
+
+  /**
+   * Fetch all payments
+   *
+   * @param {import('http').IncomingMessage} req
+   * @param {import('http').ServerResponse} res
+   */
+  getPayments = async (req, res) => {
+    const payments = await this._getPayments()
+
+    return this._sendResponse(res, {
+      status: 200,
+      data: {
+        total: payments.length,
+        payments
+      },
+      message: payments.length
+        ? 'Payments fetched successfully'
+        : 'No payments found'
+    })
+  }
+
+  /**
+   * Fetch a single payment by reference
+   *
+   * @param {import('http').IncomingMessage} req
+   * @param {import('http').ServerResponse} res
+   */
+  getPayment = async (req, res) => {
+    const reference = this._getPaymentReference(req)
+
+    const payments = await this._getPayments()
+    const payment = payments.find(p => p.reference === reference)
+
+    if (!payment) {
+      return this._sendResponse(res, {
+        status: 404,
+        message: 'Payment not found',
+        data: null
+      })
+    }
+
+    return this._sendResponse(res, {
+      status: 200,
+      data: payment,
+      message: 'Payment fetched successfully'
+    })
   }
 
   //=====================================================
-  //  PRIVATE METHODS
+  //  PRIVATE METHODS & PROPERTIES
   //=====================================================
 
-  _productPath = './model/products/products.json'
-  _entity = modelTools._extractEntityFromPath(this._productPath)
+  /** Path to payment storage */
+  _paymentPath = './model/payments/payments.json'
 
-  _getProducts = async () =>
-    (await modelTools.findAll(this._productPath))[this._entity]
+  /** Extracted entity key */
+  _entity = modelTools._extractEntityFromPath(this._paymentPath)
 
-  _getProduct = async (_id) =>
-    (await modelTools.findOne(this._productPath, _id))[this._entity]
+  /**
+   * Fetch all payments
+   */
+  _getPayments = async () => {
+    const raw = await modelTools.findAll(this._paymentPath)
+    return raw[this._entity]
+  }
 
-  _updateProduct = async (_id, data) =>
-    modelTools.update(this._productPath, data, _id)
+  /**
+   * Update payment record
+   */
+  _updatePayment = async (_id, data) =>
+    modelTools.update(this._paymentPath, data, _id)
 
-  _deleteProduct = async (_id) =>
-    modelTools.delete(this._productPath, _id)
-
+  /**
+   * Sanitize incoming payload
+   */
   _getSanitizedData = (req) => {
     const sanitize = (v) => this._validateAndSanitizeString(v)
 
     return {
-      name: sanitize(req.body?.name),
-      description: sanitize(req.body?.description),
-      price: sanitize(req.body?.price),
-      numberInStock: sanitize(req.body?.numberInStock)
+      email: sanitize(req.body?.email),
+      amount: sanitize(req.body?.amount),
+      currency: sanitize(req.body?.currency)
     }
   }
 
-  _getProductId = (req) => {
-    const routeParam = router._getParams(req).routeParam
-    const id = Number(
-      typeof routeParam === 'string'
-        ? routeParam.replace(/^\//, '')
-        : routeParam
-    )
-    return Number.isNaN(id) ? null : id
+  /**
+   * Extract payment reference from request
+   *
+   * @param {import('http').IncomingMessage} req
+   */
+  _getPaymentReference = (req) => {
+    return req.ids?.reference || req.query?.reference
   }
 
-  _validateProductId = (_id) => {
-    if (!Number.isInteger(_id) || _id <= 0) {
-      throw new Error('Valid productId is required')
-    }
+  /**
+   * Generate unique payment reference
+   */
+  _generateReference = () => {
+    return `PAY_${Date.now()}_${Math.floor(Math.random() * 1000000)}`
   }
 }
 
-export default new Payments()
+export default new PaymentsController()

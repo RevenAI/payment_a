@@ -109,9 +109,9 @@ class HttpUtils {
             payload = {
                 status: res.statusCode,
                 success: false,
-                error: error.message || String(error),
+                error:  error, //String(error),
                 data: null,
-                message: message || null
+                message: message || error.message || null
             }
         } else {
             // Success response structure
