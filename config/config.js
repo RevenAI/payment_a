@@ -15,3 +15,7 @@ export const settings = {
     isProdMode: Config.server.env === 'production',
 }
 
+export const PATH = {
+    USER_PATH: './model/users/users.json',
+    USER_TOKEN: './model/users/users_token.json'
+}

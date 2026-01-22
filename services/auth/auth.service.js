@@ -1,9 +1,10 @@
+import { PATH } from '../../config/config.js'
 import { modelTools } from '../../model/model-tools.js'
 import { AppError } from '../../utils/errors/error.utils.js'
 import { Password } from '../../utils/security/password.js'
 import { TokenService } from './token.service.js'
 
-const USER_PATH = './model/users/users.json'
+const USER_PATH = PATH.USER_PATH
 const ENTITY = modelTools._extractEntityFromPath(USER_PATH)
 
 /**
@@ -46,11 +47,11 @@ export class AuthService {
     const raw = await modelTools.findAll(USER_PATH)
     const user = raw[ENTITY].find(u => u.email === email)
 
-    if (!user) {
+    if (!user || !user._id || !user.email) {
       throw AppError.NotFound('User not registered')
     }
 
-    const isPasswordValid = Password.verify(password, user.password)
+    const isPasswordValid = Password.isMatch(password, user.password)
     if (!isPasswordValid) {
       throw AppError.UnprocessableEntity('Incorrect password')
     }
@@ -80,7 +81,7 @@ export class AuthService {
    */
   static logout(token) {
     if (!token) {
-      throw AppError.BadRequest('Token is required for logout')
+      throw AppError.BadRequest('Missing token or user already logout')
     }
 
     tokenBlacklist.add(token)

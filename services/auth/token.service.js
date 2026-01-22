@@ -1,10 +1,40 @@
 import crypto from 'node:crypto'
+// import { AppError } from '../../utils/errors/error.utils'
+// import { modelTools } from '../../model/model-tools'
+// import { PATH } from '../../config/config'
 
 const SECRET = process.env.JWT_SECRET || 'super-secret-key'
-const EXPIRES_IN = 60 * 60 // 1 hour
+const EXPIRES_IN = 60 * 60 //1 hour 
 
 export class TokenService {
 
+  //wrapper for convinience
+  /**
+   * @description generate token and persists it to db with unique Id
+   * @param {*} payload 
+   * @returns 
+   */
+  // static async generateToken(payload, userId) {
+  //   const token = this.sign(payload)
+  //   //userId is the tokenId -> token will not be found if defferent 
+  //   // user that doesnt sign it uses it
+  // await modelTools.create(PATH.USER_TOKEN, [{ tokenId: userId, token}])
+  // return token
+  // }
+
+  // static async verifyToken(token) {
+  //   const verified = this.verify(token)
+  //   const raw = await modelTools.findAll(PATH.USER_TOKEN)
+  //   const found = (raw[modelTools._extractEntityFromPath(PATH.USER_TOKEN)] || []).find(tkn => {
+  //     tkn.tokenId === verified.userId
+  //   })
+  //   if (!found) {
+  //     throw AppError.Forbidden('Access denied: Token is not valid')
+  //   }
+  //   return verified
+  // }
+  
+  //main methods
   static sign(payload) {
     const header = Buffer.from(
       JSON.stringify({ alg: 'HS256', typ: 'JWT' })
@@ -51,4 +81,6 @@ export class TokenService {
 
     return decoded
   }
+
+  
 }

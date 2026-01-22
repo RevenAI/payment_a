@@ -13,9 +13,7 @@ const HOST = Config.server.host
  */
 const server = http.createServer(async (req, res) => {
     try {
-        // AUTHENTICATION
-        //Auth.isAuthenticated(req, res)
-
+        
         // PARSE REQUEST BODY
         req.body = await httpUtils.parseRequestBody(req, { maxSize: 5 })
 

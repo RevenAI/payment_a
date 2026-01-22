@@ -94,6 +94,9 @@ class HttpUtils {
      * })
      */
     sendResponse(res, { status, data, message, error }) {
+        // Avoid writing headers/body if already sent
+        if (res.headersSent) return
+        
         // Set response status code and content type
         res.statusCode = status ?? 200
         res.setHeader('Content-Type', 'application/json')
@@ -122,9 +125,6 @@ class HttpUtils {
                 message
             }
         }
-
-        // Avoid writing headers/body if already sent
-        if (res.headerSent) return
 
         // Send serialized JSON payload
         res.end(_serialize(payload))

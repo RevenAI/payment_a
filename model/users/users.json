@@ -2,24 +2,19 @@
   "users": [
     {
       "_id": 1,
-      "firstName": "Idrees",
-      "lastName": "Omolara",
-      "email": "abbby5050@gmail.com",
-      "phone": "09087673454"
+      "firstName": "Mojosola",
+      "lastName": "Idunu",
+      "email": "ayomide30@gmail.com",
+      "phone": "0904458834645",
+      "password": "d640f65c3ce92fe9b4c5a8cfa653ef10:eadc7bdcf18fef52c9003f1f3fa29f28183594b03ea8a1de57125857f6f4c8318a71104ba802b982242d1e354dff3bd0c9bbe91665fa11e01d73236ce306a6a9"
     },
     {
       "_id": 2,
-      "firstName": "Idrees",
-      "lastName": "Omolara",
-      "email": "abbby505780@gmail.com",
-      "phone": "09087003454"
-    },
-    {
-      "_id": 3,
-      "firstName": "Enitan",
-      "lastName": "Adebanjo",
-      "email": "enitan@gmail.com",
-      "phone": "090457834645"
+      "firstName": "ODED",
+      "lastName": "Mojuju",
+      "email": "ayomide3030@gmail.com",
+      "phone": "0904458834095",
+      "password": "9fb5ed609539159061b8c04d8f01c99a:0a4c6c66a96b00f8b2d536975bd67efdb296f74ec0e60acdbdfdb0281b630ffc743a919c1c0aa35f4c083991f97d1a4dcf6b1b5e72d79eb1c89b51234210e23b"
     }
   ]
 }

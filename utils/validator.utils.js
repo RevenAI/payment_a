@@ -3,6 +3,19 @@ export class Validator {
   //  PUBLIC VALIDATION METHODS
   //====================================================
 
+  static validatePassword(password) {
+    let setPassword = false
+    if (!password || typeof password !== 'string') return { msg: 'Invalid password', setPassword }
+    const passLen = password.length
+    if (passLen < 8) {
+      return { msg: 'Password must be at least 8 characters', setPassword }
+    }
+    if (passLen > 30) {
+      return { msg: 'Password must be at most 30 characters', setPassword }
+    }
+    return { msg: '', setPassword: true }
+  }
+
   static validateEmail(email) {
     if (!email) return false
 
@@ -58,6 +71,13 @@ export class Validator {
   static validateUserPayload(payload) {
     const errors = []
 
+    if (payload.password) {
+      const { msg, setPassword } = this.validatePassword(payload.password)
+      if (!setPassword) {
+        errors.push(msg)
+      }
+    }
+
     if (payload.email && !this.validateEmail(payload.email)) {
       errors.push('Invalid email format')
     }
@@ -68,6 +88,10 @@ export class Validator {
 
     if (payload.dob && !this.validateDob(payload.dob)) {
       errors.push('Invalid date of birth')
+    }
+
+    if (payload.gender && !this.validateGender(payload.gender)) {
+      errors.push('Invalid gender value')
     }
 
     if (payload.gender && !this.validateGender(payload.gender)) {

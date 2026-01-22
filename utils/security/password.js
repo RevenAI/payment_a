@@ -16,7 +16,13 @@ export class Password {
     return `${salt}:${hash}`
   }
 
-  static verify(password, stored) {
+  /**
+   * 
+   * @param {*} password Incomming password to verify
+   * @param {*} stored Password already stored
+   * @returns 
+   */
+  static isMatch(password, stored) {
     const [salt, originalHash] = stored.split(':')
 
     const hash = crypto

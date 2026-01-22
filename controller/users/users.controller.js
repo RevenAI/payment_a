@@ -1,4 +1,7 @@
+import { PATH } from "../../config/config.js"
 import { modelTools } from "../../model/model-tools.js"
+import { AuthService } from "../../services/auth/auth.service.js"
+import { Password } from "../../utils/security/password.js"
 import { Validator } from "../../utils/validator.utils.js"
 import { BaseController } from "../base.controller.js"
 
@@ -34,15 +37,21 @@ class UsersController extends BaseController {
    * @param {import('http').ServerResponse} res - Response object
    */
   registerUser = async (req, res) => {
-    
       const data = this._getSanitizedData(req)
-      const { firstName, lastName, email, phone, gender, dob } = data
+      const { firstName, lastName, email, phone, gender, dob, password } = data
 
       // Required field check
       if (!email || !phone) {
          return this._sendResponse(res, {
            status: 400,
            message: 'Email and phone required'
+         })
+      }
+
+      if (!password) {
+         return this._sendResponse(res, {
+           status: 400,
+           message: 'password required'
          })
       }
 
@@ -68,6 +77,7 @@ class UsersController extends BaseController {
          })
       }
 
+      const hashedPassword = Password.hash(password)
       // Create user
       const created = await modelTools.create(this._userPath, [{
         firstName,
@@ -75,7 +85,8 @@ class UsersController extends BaseController {
         email: email.toLowerCase(),
         phone,
         gender,
-        dob
+        dob,
+        password: hashedPassword,
       }])
 
       const newUser = created[this._entity]?.[0]
@@ -92,6 +103,39 @@ class UsersController extends BaseController {
         status: 201,
         data: newUser,
         message: 'User registered successfully'
+      })
+  }
+
+  /**
+   * 
+   * @param {*} req 
+   * @param {*} res 
+   * @returns 
+   */
+  login = async (req, res) => {
+    const cleanData = this._getSanitizedData(req)
+
+      // VALIDATION (after sanitization)
+    const validation = Validator.validateUserPayload(cleanData)
+    if (!validation.valid) {
+      return this._sendResponse(res, {
+        status: 400,
+        message: validation.errors.join(', ')
+      })
+    }
+
+    const authPayload = await AuthService.login(cleanData)
+    if (!authPayload || !authPayload.user || !authPayload.token ) {
+      return this._sendResponse(res, {
+        status: 401,
+        message: 'Access denied: Invalid authentication credentials.'
+      })
+    }
+    
+      return this._sendResponse(res, {
+        status: 200,
+        message: 'Login successful.',
+        data: authPayload,
       })
   }
 
@@ -130,7 +174,7 @@ class UsersController extends BaseController {
         })
       }
 
-      const { email, phone } = data
+      const { email, phone, password } = data
 
       // Check for email/phone conflicts with other users
       if (email || phone) {
@@ -249,7 +293,7 @@ class UsersController extends BaseController {
   //=====================================================
 
   /** Path to the user JSON file */
-  _userPath = './model/users/users.json'
+  _userPath = PATH.USER_PATH
 
   /** Entity key extracted from file path */
   _entity = modelTools._extractEntityFromPath(this._userPath)
@@ -296,15 +340,25 @@ class UsersController extends BaseController {
    * @returns {Object} Sanitized user data
    */
   _getSanitizedData = (req) => {
+    const data = {}
+    //remove undefined value and password
+    for (const [key, value] of Object.entries(req.body).filter(Boolean)) {
+      if (key === 'password') {
+        continue
+      }
+      data[key] = value
+    }
+    
     const sanitize = (v) => this._validateAndSanitizeString(v)
 
     return {
-      firstName: sanitize(req.body?.firstName),
-      lastName: sanitize(req.body?.lastName),
-      email: sanitize(req.body?.email),
-      phone: sanitize(req.body?.phone),
-      gender: sanitize(req.body?.gender),
-      dob: sanitize(req.body?.dob)
+      firstName: sanitize(data.firstName),
+      lastName: sanitize(data.lastName),
+      email: sanitize(data.email),
+      phone: sanitize(data.phone),
+      gender: sanitize(data.gender),
+      dob: sanitize(data.dob),
+      password: req.body?.password,
     }
   }
 

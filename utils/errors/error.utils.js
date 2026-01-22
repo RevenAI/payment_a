@@ -1,3 +1,4 @@
+import { settings } from "../../config/config.js";
 
 /**
  * Custom application error class for standardized error handling.

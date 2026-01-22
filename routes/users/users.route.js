@@ -1,5 +1,7 @@
 import usersController from "../../controller/users/users.controller.js"
+import { Auth } from "../../middleware/auth/auth.middleware.js"
 import { router } from "../routers.js"
+import crypto from 'node:crypto'
 
 /**
  * Predefined user routes to avoid repeating strings.
@@ -8,6 +10,7 @@ const USER_ROUTES = {
     GET_ALL: '/users',
     GET_SINGLE: '/users/:userId',
     POST: '/users',
+    LOGIN: '/users/login',
     PUT: '/users/:userId',
     PATCH: '/users/:userId',
     DELETE: '/users/:userId',
@@ -30,6 +33,8 @@ export const userRouter = async (req, res) => {
     // -------------------------
     const isGetAll = pathname === USER_ROUTES.GET_ALL || pathname === `${USER_ROUTES.GET_ALL}/`
      if (router.isGetRoute(req) && isGetAll) {
+         // AUTHENTICATION
+        await Auth.isAuthenticated(req, res)
         /**
          * @route GET /users
          * @access Public
@@ -72,6 +77,23 @@ export const userRouter = async (req, res) => {
          * @returns {Promise<void>}
          */
         await router.post(req, res, USER_ROUTES.POST, usersController.registerUser)
+        return true
+    }
+
+    // -------------------------
+    // POST /users - Register new user
+    // -------------------------
+     const isLogin = pathname === USER_ROUTES.LOGIN || pathname === `${USER_ROUTES.LOGIN}/`
+    if (router.isPostRoute(req) && isLogin ) {
+        /**
+         * @route POST /users/login
+         * @access Public
+         * @param {Object} req.body - User data payload
+         * @param {string} req.body.email
+         * @param {string} req.body.password
+         * @returns {Promise<void>}
+         */
+        await router.post(req, res, USER_ROUTES.LOGIN, usersController.login)
         return true
     }
 
