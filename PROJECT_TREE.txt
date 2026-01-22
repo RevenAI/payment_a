@@ -1,0 +1,71 @@
+pay4me
+├── config
+│   └── config.js
+├── controller
+│   ├── base.controller.js
+│   ├── payments
+│   │   └── payments.controller.js
+│   ├── products
+│   │   └── products.controller.js
+│   └── users
+│       └── users.controller.js
+├── doc
+│   ├── middleware.md
+│   └── q_one.md
+├── HTTPS
+│   ├── api-test
+│   │   ├── payloads
+│   │   │   ├── payments.init.json
+│   │   │   ├── payments.product.json
+│   │   │   ├── products.create.json
+│   │   │   ├── products.update.json
+│   │   │   └── users.json
+│   │   └── scripts
+│   │       ├── payments
+│   │       ├── products
+│   │       └── users
+│   │           ├── payments.sh
+│   │           ├── products.sh
+│   │           └── users.sh
+│   ├── generate-tree.sh
+│   ├── request
+│   └── response
+├── index.js
+├── middleware
+│   ├── auth
+│   │   ├── auth.middleware.js
+│   │   └── readme.auth.md
+│   └── security
+├── model
+│   ├── db
+│   │   └── test-user.json
+│   ├── model-tools.js
+│   └── users
+│       └── users.json
+├── package.json
+├── PROJECT_TREE.txt
+├── README.md
+├── routes
+│   ├── payments
+│   │   └── payments.route.js
+│   ├── products
+│   │   └── products.route.js
+│   ├── routers.js
+│   └── users
+│       └── users.route.js
+├── services
+│   ├── auth
+│   │   ├── auth.service.js
+│   │   ├── readme.token.md
+│   │   └── token.service.js
+│   └── rate-limit
+└── utils
+    ├── errors
+    │   ├── async.utils.js
+    │   └── error.utils.js
+    ├── helper.utils.js
+    ├── http.utils.js
+    ├── security
+    │   ├── password.js
+    │   └── readme.password.md
+    └── validator.utils.js

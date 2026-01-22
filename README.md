@@ -44,44 +44,78 @@ This project is designed for **learners** who want to **understand backend engin
 ## 📁 Project Structure
 
 ```
-src/
-│
-├── index.js                # Entry point (http server)
-│
-├── routes/
-│   ├── routers.js           # Custom router & route matcher
-│
-├── controllers/
-│   ├── base.controller.js   # Shared response & sanitization logic
-│   ├── users/
-│   │   └── users.controller.js
-│   ├── products/
+payment_a
+├── config
+│   └── config.js
+├── controller
+│   ├── base.controller.js
+│   ├── payments
+│   │   └── payments.controller.js
+│   ├── products
 │   │   └── products.controller.js
-│   └── payments/
-│       └── payments.controller.js
-│
-├── services/
-│   ├── auth/
-│   │   └── token.service.js # Token sign / verify
-│   └── payments/
-│       └── payment.service.js
-│
-├── middleware/
-│   └── auth.guard.js        # Authentication guard
-│
-├── model/
-│   db |---
-├──  model-tools.js       # File-based CRUD engine
-│     ├── users/
-│     │   └── users.json
-│     ├── products/
-│     │   └── products.json
-│     └── payments/
-│         └── payments.json
-│
-└── utils/
-    └── helpers.js
-    ├── validator.js         # Email, phone, DOB, gender, etc.
+│   └── users
+│       └── users.controller.js
+├── doc
+│   ├── middleware.md
+│   └── q_one.md
+├── HTTPS
+│   ├── api-test
+│   │   ├── payloads
+│   │   │   ├── payments.init.json
+│   │   │   ├── payments.product.json
+│   │   │   ├── products.create.json
+│   │   │   ├── products.update.json
+│   │   │   └── users.json
+│   │   └── scripts
+│   │       ├── payments
+│   │       ├── products
+│   │       └── users
+│   │           ├── payments.sh
+│   │           ├── products.sh
+│   │           └── users.sh
+│   ├── generate-tree.sh
+│   ├── request
+│   └── response
+├── index.js
+├── middleware
+│   ├── auth
+│   │   ├── auth.middleware.js
+│   │   └── readme.auth.md
+│   └── security
+├── model
+│   ├── db
+│   │   └── test-user.json
+│   ├── model-tools.js
+│   └── users
+│       └── users.json
+├── package.json
+├── PROJECT_TREE.txt
+├── README.md
+├── routes
+│   ├── payments
+│   │   └── payments.route.js
+│   ├── products
+│   │   └── products.route.js
+│   ├── routers.js
+│   └── users
+│       └── users.route.js
+├── services
+│   ├── auth
+│   │   ├── auth.service.js
+│   │   ├── readme.token.md
+│   │   └── token.service.js
+│   └── rate-limit
+└── utils
+    ├── errors
+    │   ├── async.utils.js
+    │   └── error.utils.js
+    ├── helper.utils.js
+    ├── http.utils.js
+    ├── security
+    │   ├── password.js
+    │   └── readme.password.md
+    └── validator.utils.js
+
 ```
 
 ---
