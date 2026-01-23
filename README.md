@@ -148,7 +148,7 @@ Routes are matched manually using:
 * `req.url`
 * Regex-based path matching
 
-Example:
+Example 1:
 
 ```js
 router.isPostRoute(req, '/users/register') {
@@ -156,6 +156,15 @@ router.isPostRoute(req, '/users/register') {
     //for eample
     return usersController.registerUser
 }
+```
+
+Example 2:
+
+```js
+await router.get(req, res, '/products', productsController.getProducts)
+await router.post(req, res, '/products', productsController.createProduct)
+await router.put(req, res, '/products/2', productsController.updateProduct)
+await router.delete(req, res, '/products/2', productsController.deleteProduct)
 ```
 
 Route params like:

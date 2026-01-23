@@ -4,6 +4,8 @@ import { httpUtils } from './utils/http.utils.js'
 import { Auth } from './middleware/auth/auth.middleware.js'
 import { userRouter } from './routes/users/users.route.js' 
 import { Config } from './config/config.js'
+import { productRouter } from './routes/products/products.route.js'
+import { paymentRouter } from './routes/payments/payments.route.js'
 
 const PORT = Config.server.port
 const HOST = Config.server.host
@@ -22,8 +24,16 @@ const server = http.createServer(async (req, res) => {
         req.query = router.getQueryParams(req)
 
         // USER ROUTES
-        const handled = await userRouter(req, res)
-        if (handled) return // route handled successfully
+        const handledUser = await userRouter(req, res)
+        if (handledUser) return // route handled successfully
+
+        // PRODUCT ROUTES
+        const handledProduct = await productRouter(req, res)
+        if (handledProduct) return
+
+        //PAYMENT ROUTES
+        const handledPayment = await paymentRouter(req,res)
+        if (handledPayment) return
 
         // NO MATCHED ROUTE → 404
         httpUtils.sendResponse(res, {
